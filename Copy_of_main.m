@@ -2,9 +2,6 @@ clear;
 %% 参数初始化
 Init_sim;
 global sim;
-way_of_userinstall='限定撒点';
-limit_min_distance=150;
-limit_max_distance=160;
 Bandwidth_MHz=400;%载波带宽
 Subcarrier_Spacing_kHz=120;%子载波间隔
 frame=10e-3;%无线帧10ms
@@ -65,59 +62,26 @@ nSymbolSlot = resourceGrid.nRBTime .* floor(resourceGrid.sizeRbTimeS ./symbolDur
 %wrap_around,平移到周边6个区域
 [sitecoorx,sitecoory,pedge,theatedge]=cellinstall;
 [sitex_wrap,sitey_wrap]=wraparound(sitecoorx,sitecoory);
-%wrap-around采取平移的方式消除边缘效应
-BSnum=sim.cellnum/3;
-    BS=cell(BSnum,1);
-    for i=1:BSnum
-        BS{i}.hbs=sim.hbs;%基站统一高度hbs25m
-        BS{i}.site=[sitecoorx(i),sitecoory(i) sim.hbs];%记录每个基站的坐标
-    end      
-
 
 %%循环控制参数
 cyclenum=1;
 for cyclei=1:cyclenum
-    if way_of_userinstall=='限定撒点'
-        [userlistcoorx,userlistcoory]=limit_userinstall_limit(BS,limit_min_distance,limit_max_distance);
-
-    elseif way_of_userinstall=='随机撒点'
-        [userlistcoorx,userlistcoory]=userinstall(pedge,theatedge); %参考comp的用户撒点方式，19个小区内随机撒点
-    end
+    [userlistcoorx,userlistcoory]=userinstall(pedge,theatedge); 
     %输入参数：usernum 用户数量
     %          userscalex 用户分布边范围x坐标
     %          userscaley 用户分布边范围y坐标
     %输出参数：userlistcoorx 用户位置列表x轴坐标
     %          userlistcoory 用户位置列表y轴坐标
-    usernum=sim.usernumpersite*sim.cellnum;
-    UE=cell(usernum,1);
-    for i=1:usernum
-        UE{i}.site=[userlistcoorx(i), userlistcoory(i)];%记录每个用户的坐标
-        Nf1=unifrnd(1,4,1);
-        nf1=unifrnd(1,Nf1,1);
-        hut=3*(nf1-1)+1.5;
-        UE{i}.hut=hut;
-    end
-      %%RIS随机撒点，输出RIS位置坐标RISlistcoorx,RISlistcoory
-    [RISlistcoorx,RISlistcoory] = RISinstall( pedge,theatedge);
-    RISnum=sim.RISnumpersite*sim.cellnum;
-    RIS=cell(RISnum,1);
-    for i=1:RISnum
-       RIS{i}.RIShut=sim.RIShut;%ris统一高度rishut25m  
-       RIS{i}.site=[RISlistcoorx(i),RISlistcoory(i) sim.RIShut];%记录每个用户的坐标
-       RIS{i}.unit_vector=[];
-    end
+
+    
     %%%%% 服务小区确定，输出用户、小区结构体，记录用户所属小区情况和小区内服务用户情况 %%%%%
-    [userservice,cellservice_UE,pathloss_UE,pathloss_min_UE]=servicecell_wrap(sitex_wrap,sitey_wrap,userlistcoorx,userlistcoory);
-    %UE和BS进行配对
-    %userservice用户所属小区： struct; cellservice（小区服务用户数以及编号）: struct
+    [userservice,cellservice,pathloss,pathloss_min]=servicecell_wrap(sitex_wrap,sitey_wrap,userlistcoorx,userlistcoory);    
+    %userservice：1x570 struct; cellservice: 1x57 struct
     %pathloss:570*57，the pathloss between each user and each cell
     %pathloss_min:570*3，每个UE与服务小区之间的pathloss
-    [RISservice,cellservice_RIS,pathloss_RIS,pathloss_min_RIS]=servicecell_wrap(sitex_wrap,sitey_wrap,RISlistcoorx,RISlistcoory);
-     %RIS和BS进行配对
-     [unit_vector_RIS]=RISvector(RISservice,RIS,BS);
-    for i=1:RISnum
-       RIS{i}.unit_vector=unit_vector_RIS{i};%每个RIS的朝向单位向量
-    end
+    %%RIS随机撒点，输出RIS位置坐标RISlistcoorx,RISlistcoory
+    [RISlistcoorx,RISlistcoory,RIShut] = RISinstall( pedge,theatedge);
+     %%确定用户位置坐标x,y以及初始角度和距离
       hut=25;
       angle.a=unifrnd(0,360);
       angle.b=90;
