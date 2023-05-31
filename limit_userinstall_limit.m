@@ -9,9 +9,9 @@ function [userlistcoorx,userlistcoory]=limit_userinstall_limit(BS,limit_min_dist
 %          out区分室内室外用户   out=1为室外用户
 %          d2_in室内用户的室内距离
 global sim;
-usernumpersite=sim.usernumpersite;
+usernumpercell=sim.usernumpercell;
 sitenum=sim.sitenum;
-usernum=sitenum*usernumpersite*3;
+usernum=sitenum*usernumpercell*3;
 userlistcoorx=zeros(1,usernum);
 userlistcoory=zeros(1,usernum);
 hut=zeros(1,usernum);

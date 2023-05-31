@@ -10,10 +10,9 @@ function [RISlistcoorx,RISlistcoory] = RISinstall( pedge,theatedge)
 %          d2_in室内用户的室内距离
 global sim;
 %usernumpercell=sim_consts.usernumpercell;
-RISnumpersite=sim.RISnumpersite;
+RISnumpercell=sim.RISnumpercell;
 sitenum=sim.sitenum;
-
-RISnum=sitenum*RISnumpersite*3;
+RISnum=sitenum*RISnumpercell*3;
 
 RISlistcoorx=zeros(1,RISnum);
 RISlistcoory=zeros(1,RISnum);

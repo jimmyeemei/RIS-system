@@ -8,12 +8,11 @@ function [userlistcoorx,userlistcoory,hut] = userinstall( pedge,theatedge)
 %          hut 终端天线高度
 %          out区分室内室外用户   out=1为室外用户
 %          d2_in室内用户的室内距离
+paramentss;
 global sim;
-usernumpersite=sim.usernumpersite;
-
+usernumpercell=sim.usernumpercell;
 sitenum=sim.sitenum;
-
-usernum=sitenum*usernumpersite*3;
+usernum=sitenum*usernumpercell*3;
 
 userlistcoorx=zeros(1,usernum);
 userlistcoory=zeros(1,usernum);

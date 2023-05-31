@@ -66,11 +66,11 @@ nSymbolSlot = resourceGrid.nRBTime .* floor(resourceGrid.sizeRbTimeS ./symbolDur
 [sitecoorx,sitecoory,pedge,theatedge]=cellinstall;
 [sitex_wrap,sitey_wrap]=wraparound(sitecoorx,sitecoory);
 %wrap-around采取平移的方式消除边缘效应
-BSnum=sim.cellnum/3;
+BSnum=sim.cellnum;
     BS=cell(BSnum,1);
     for i=1:BSnum
         BS{i}.hbs=sim.hbs;%基站统一高度hbs25m
-        BS{i}.site=[sitecoorx(i),sitecoory(i) sim.hbs];%记录每个基站的坐标
+        BS{i}.site=[sitex_wrap(i),sitey_wrap(i) sim.hbs];%记录每个基站的坐标
     end      
 
 
@@ -88,7 +88,7 @@ for cyclei=1:cyclenum
     %          userscaley 用户分布边范围y坐标
     %输出参数：userlistcoorx 用户位置列表x轴坐标
     %          userlistcoory 用户位置列表y轴坐标
-    usernum=sim.usernumpersite*sim.cellnum;
+    usernum=sim.usernumpercell*sim.cellnum;
     UE=cell(usernum,1);
     for i=1:usernum
         UE{i}.site=[userlistcoorx(i), userlistcoory(i)];%记录每个用户的坐标
@@ -99,29 +99,32 @@ for cyclei=1:cyclenum
     end
       %%RIS随机撒点，输出RIS位置坐标RISlistcoorx,RISlistcoory
     [RISlistcoorx,RISlistcoory] = RISinstall( pedge,theatedge);
-    RISnum=sim.RISnumpersite*sim.cellnum;
+    RISnum=sim.RISnumpercell*sim.cellnum;
     RIS=cell(RISnum,1);
     for i=1:RISnum
-       RIS{i}.RIShut=sim.RIShut;%ris统一高度rishut25m  
+       RIS{i}.hut=sim.RIShut;%ris统一高度rishut25m  
        RIS{i}.site=[RISlistcoorx(i),RISlistcoory(i) sim.RIShut];%记录每个用户的坐标
        RIS{i}.unit_vector=[];
     end
-    %%%%% 服务小区确定，输出用户、小区结构体，记录用户所属小区情况和小区内服务用户情况 %%%%%
-    [userservice,cellservice_UE,pathloss_UE,pathloss_min_UE]=servicecell_wrap(sitex_wrap,sitey_wrap,userlistcoorx,userlistcoory);
+%%  %%%%% 服务小区确定，输出用户、小区结构体，记录用户所属小区情况和小区内服务用户情况 %%%%%
+    [userservice,cellservice_UE,pathloss_UE,pathloss_min_UE]=servicecell_wrap(sitex_wrap,sitey_wrap,userlistcoorx,userlistcoory,UE);
     %UE和BS进行配对
     %userservice用户所属小区： struct; cellservice（小区服务用户数以及编号）: struct
     %pathloss:570*57，the pathloss between each user and each cell
     %pathloss_min:570*3，每个UE与服务小区之间的pathloss
-    [RISservice,cellservice_RIS,pathloss_RIS,pathloss_min_RIS]=servicecell_wrap(sitex_wrap,sitey_wrap,RISlistcoorx,RISlistcoory);
+    [RISservice,cellservice_RIS,pathloss_RIS,pathloss_min_RIS]=servicecell_wrap(sitex_wrap,sitey_wrap,RISlistcoorx,RISlistcoory,RIS);
      %RIS和BS进行配对
      [unit_vector_RIS]=RISvector(RISservice,RIS,BS);
     for i=1:RISnum
        RIS{i}.unit_vector=unit_vector_RIS{i};%每个RIS的朝向单位向量
     end
+%BS-RIS-UE进行配对
+
+
+[RISlink]= linkmatch(sitex_wrap,sitey_wrap,userlistcoorx,userlistcoory,UE,RIS,BS,cellservice_UE,cellservice_RIS);
+
       hut=25;
       angle.a=unifrnd(0,360);
       angle.b=90;
-      angle.c=0;
-     
-     
+      angle.c=0;  
 end

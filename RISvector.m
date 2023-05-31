@@ -1,8 +1,9 @@
 function [unit_vector_ris] = RISvector(RISservice, RIS ,BS)
+paramentss;
 global sim;
-RISnumpersite=sim.RISnumpersite;
+RISnumpercell=sim.RISnumpercell;
 sitenum=sim.sitenum;
-RISnum=sitenum*RISnumpersite*3;
+RISnum=sitenum*RISnumpercell*3;
  unit_vector_ris=cell(RISnum,1);
 for i=1:RISnum
     BSid=RISservice(i).anchorcellid;

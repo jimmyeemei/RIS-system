@@ -1,4 +1,4 @@
-function [ userservice,cellservice,pathloss2,pathloss_min ] = servicecell_wrap(sitex_wrap,sitey_wrap,ux,uy)
+function [ userservice,cellservice,pathloss2,pathloss_min ] = servicecell_wrap(sitex_wrap,sitey_wrap,ux,uy,UE)
 %UNTITLED1 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -6,7 +6,6 @@ function [ userservice,cellservice,pathloss2,pathloss_min ] = servicecell_wrap(s
 %         sitey_wrap 小区中心坐标y
 %         userlistcoorx 用户坐标x
 %         userlistcoory 用户坐标y
-%         comprange 大于comprange的范围为comp用户区域，单位：米
 %         compthreshold 在门限范围内的小区组成comp，单位db,路损公式：30.18+26.0lg(d)
 % 输出参数：userservice 用户端记录的服务小区结构体，包括协作小区数量，主小区ID，协作小区ID
 %           cellservice 基站端记录的服务用户结构体，包括主小区用户数量，主小区用户列表，协作小区用户数量，协作用户列表
@@ -40,13 +39,46 @@ pathloss=zeros(usernum,cellnum*7);%路损矩阵
 for i=1:usernum
     for l=1:cellnum*7
         %%%%%%此处的路损是路径损耗及天线增益两部分的叠加%%%%%
+        hut=UE{i}.hut;
+        hbs=sim.hbs;
         j=ceil(l/3); %j代表小区对应地site ID
-        distance=sqrt((sitex_wrap(j)-ux(i))^2+(sitey_wrap(j)-uy(i))^2);%距离计算
-
-        %%%yangshan:PL按25814计算，阴影改成正态的%%%
-        %         pathloss(i,j)=30.18+26.0*log10(distance);%路损计算
-        pathloss0=15.3+37.6*log10(distance)+20;%路损计算8dB阴影衰落版本 包括穿透损耗 但没有考虑相关性
-        
+        d2d=sqrt((sitex_wrap(j)-ux(i))^2+(sitey_wrap(j)-uy(i))^2);%距离计算
+        d3d=sqrt(d2d^2+(hbs-hut)^2);
+        dp=4*sim.hbs*hut*sim.fc/3e8;
+       if  d2d<dp
+           los=28+22*log10(d3d)+20*log10(sim.fc);%3gpp路损计算模型
+           sigma_SF_los=4;%阴影衰落标准差
+        else
+           los=28+40*log10(d3d)+20*log10(sim.fc)-9*log10(dp^2+(hbs-hut)^2);
+           sigma_SF_los=4;%阴影衰落标准差
+        end
+        %到小区的nlos
+        nlos=13.54 + 39.08*log10(d3d)+ 20*log10(sim.fc) - 0.6*(hut-1.5);
+        nlos=max(los,nlos);
+        sigma_SF_nlos=6;%阴影衰落标准差
+        %得到los概率
+        if d2d<=18
+            los_probability=1;
+        else
+            if hut<=13
+                c_hut=0;
+            elseif (hut>13)&&(hut<=23)
+                c_hut=((hut-13)/10)^1.5;
+            else
+            end
+            
+            los_probability=(18/d2d+exp(-d2d/63)*(1-18/d2d))*(1+c_hut*5/4*(d2d/100)^3*exp(-d2d/150));
+        end
+        %判定是否为los；
+        islos=rand<=los_probability;
+        %得到路损
+        if  islos
+            pathloss(i,l)=los;
+            pathloss0=pathloss(i,l)+normrnd(0,sigma_SF_los);
+        else
+            pathloss(i,l)=nlos;
+            pathloss0=pathloss(i,l)+normrnd(0,sigma_SF_nlos);
+        end
         %%%计算天线增益%%%%
         delta_x=ux(i)-sitex_wrap(j);
         delta_y=uy(i)-sitey_wrap(j);
@@ -75,7 +107,7 @@ for i=1:usernum
                 angle_user_cell=angle_user_cell+360;
             end
         end
-        BSantenna_gain=-min(12*(angle_user_cell/70)^2,20)+17;%计算三扇区天线增益        
+        BSantenna_gain=-min(12*(angle_user_cell/65)^2,30)+17;%计算三扇区天线增益        
         pathloss(i,l)=pathloss0-BSantenna_gain;%应该是减，pathloss是损耗，gain是增益
 
     end
