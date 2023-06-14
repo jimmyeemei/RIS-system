@@ -35,9 +35,9 @@ for i=1:usernum
 
     end
     [minloss,minlossid]=min(SNR_BIU(1:cellservice_RIS(BS1).anchorusernum));
-RISlink.UEnum=i;
-RISlink.BSnum=BS1;
-RISlink.RISnum=minlossid;
-RISlink.BIUloss=minloss;
+RISlink{i}.UEnum=i;
+RISlink{i}.BSnum=BS1;
+RISlink{i}.RISnum=minlossid;
+RISlink{i}.BIUloss=minloss;
 end
 
