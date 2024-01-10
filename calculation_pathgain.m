@@ -115,7 +115,7 @@ channel_coef = squeeze(pathGains(1,1,:,:));
 PL = db2pow(-pathloss_basic);
 H_d = channel_coef;
 % 添加路径损耗和阴影衰落
-h_d = ifft(H_d).*PL.*SF;
+h_d = ifft(H_d).*sqrt(PL).*sqrt(SF);
 
 end
 

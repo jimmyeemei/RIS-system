@@ -71,6 +71,7 @@ for i=1:usernum
         end
         %判定是否为los；
         islos=rand<=los_probability;
+        islos=1;
         %得到路损
         if  islos
             pathloss(i,l)=los;
@@ -138,7 +139,7 @@ for cc=1:cellnum
         pathloss2(user_list,inter_map_id_list(1,cc_around)*3-2:inter_map_id_list(1,cc_around)*3)=pathloss(user_list,inter_id_list(1,cc_around)*3-2:inter_id_list(1,cc_around)*3);
     end
 end
-
+pathloss2;
 pathloss_min=zeros(usernum,3);
 for i=1:usernum
     [minloss,minlossid]=min(pathloss2(i,:));%寻找最小路损

@@ -1,10 +1,9 @@
-function [h_d, mu_XPR, sigma_XPR] = Tx_Rx(TXlocation,RISnodelocation,RXlocation)
+function [h_d, mu_XPR, sigma_XPR] = Tx_Rx(TXlocation,RXlocation)
 
 %% %%%%%%%%%% 界面参数导入 %%%%%%%%%%
 % 用户自定义参数
 parament;
 TX.location=TXlocation;
-RISnode.location=RISnodelocation;
 RX.location=RXlocation;
 % 默认参数
 %% %%%%%%%%%% 信道生成所需输入参数 %%%%%%%%%%
